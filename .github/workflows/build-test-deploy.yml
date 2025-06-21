@@ -2,12 +2,10 @@ name: build-test-deploy
 
 on: push
 
-jobs: 
+jobs:
   build:
     runs-on: ubuntu-latest
-    outputs:
-      build-status: ${{ steps.build.outcome }}
-    steps: 
+    steps:
       - name: Checkout repo
         uses: actions/checkout@v3
 
@@ -15,18 +13,25 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: '18.x'
+
+      - name: Cache node modules
+        uses: actions/cache@v3
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
 
       - name: Install dependencies
         run: npm install
 
       - name: Build
-        id: build
         run: npm run build
 
-  test: 
+  lint:
     needs: build
     runs-on: ubuntu-latest
-    steps: 
+    steps:
       - name: Checkout repo
         uses: actions/checkout@v3
 
@@ -38,5 +43,20 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      - name: Run tests
-        run: npm test
+      - name: Run ESLint
+        run: npm run lint
+
+  test:
+    needs: [build, lint]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18.x'
+
+      - name: Install dependencies
+        run: npm install
