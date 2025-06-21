@@ -1,26 +1,42 @@
 name: build-test-deploy
+
 on: push
+
 jobs: 
   build:
     runs-on: ubuntu-latest
+    outputs:
+      build-status: ${{ steps.build.outcome }}
     steps: 
-      - name: checkout repo
+      - name: Checkout repo
         uses: actions/checkout@v3
-      - name: use node.js
+
+      - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
           node-version: '18.x'
-      - run: npm install
-      - run: npm run build 
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build
+        id: build
+        run: npm run build
+
   test: 
     needs: build
     runs-on: ubuntu-latest
     steps: 
-      - name: checkout repo
+      - name: Checkout repo
         uses: actions/checkout@v3
-      - name: use node.js
+
+      - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
           node-version: '18.x'
-      - run: npm install
-      - run: npm test
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Run tests
+        run: npm test
